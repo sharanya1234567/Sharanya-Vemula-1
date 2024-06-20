@@ -1,0 +1,173 @@
+--ANOMOLIES
+
+--UPDATE ANOMOLY
+
+-- Example: Update doctor's specialty
+UPDATE doctors
+SET specialty = 'Cardiovascular Surgery'
+WHERE did = 101;
+
+-- If the specialty is also recorded in other tables, inconsistency can occur.
+
+
+--DELETE ANOMOLY
+
+-- Example: Delete a patient record
+DELETE FROM patients
+WHERE pid = 1;
+
+-- If there are appointments for this patient, they will reference a non-existent patient.
+
+
+--INSERTION  ANOMOLY
+-- Example: Inserting a new appointment for a non-existent patient
+INSERT INTO appointments (aid, pid, did, appointment_date, status)
+VALUES (204, 4, 101, '2024-07-01', 'Pending');  -- Assuming pid 4 does not exist
+
+--Candidate Keys and Primary Key
+
+-- Example: Display product information and choosing primary key
+SELECT pid, pname, age, gender, addr
+FROM patients;
+
+--FOREIGN KEYS
+
+-- Example: Joining Orders and Customers (Appointments and Patients) to retrieve order details for a specific customer (patient)
+SELECT a.aid, p.pname, a.did
+FROM appointments a
+INNER JOIN patients p ON a.pid = p.pid
+WHERE a.pid = 1;
+
+
+--NORMALIZATION LEVELS
+
+--1NF
+-- Violating 1NF
+CREATE TABLE PatientAppointments
+(
+    aid INT(3),
+    pid INT(3),
+    appointment_details VARCHAR(255)  -- E.g., "2024-06-01, Completed; 2024-07-01, Pending"
+);
+
+
+--Example of a table following 1NF:
+
+CREATE TABLE patients
+(
+    pid INT(3) PRIMARY KEY,
+    pname VARCHAR(50) NOT NULL,
+    age INT(3),
+    gender CHAR(1) CHECK(gender IN ('M', 'F')),
+    addr VARCHAR(100)
+);
+
+
+--2NF
+
+--EXAMPLE VIOLATING 2NF
+
+-- Violating 2NF
+CREATE TABLE AppointmentDetails
+(
+    aid INT(3) PRIMARY KEY,
+    pid INT(3),
+    appointment_date DATE,
+    doctor_name VARCHAR(50)  -- Doctor's name depends on did, not aid
+);
+
+
+--Example following 2NF
+
+CREATE TABLE appointments
+(
+    aid INT(3) PRIMARY KEY,
+    pid INT(3),
+    did INT(3),
+    appointment_date DATE,
+    status VARCHAR(30),
+    FOREIGN KEY(pid) REFERENCES patients(pid),
+    FOREIGN KEY(did) REFERENCES doctors(did)
+);
+
+
+--3NF
+
+--EXAMPLE VIOLATING 3NF
+
+-- Violating 3NF
+CREATE TABLE Appointments
+(
+    aid INT(3) PRIMARY KEY,
+    pid INT(3),
+    did INT(3),
+    appointment_date DATE,
+    patient_addr VARCHAR(100)  -- patient_addr depends on pid, not aid
+);
+
+--Example following 3NF
+
+CREATE TABLE appointments
+(
+    aid INT(3) PRIMARY KEY,
+    pid INT(3),
+    did INT(3),
+    appointment_date DATE,
+    status VARCHAR(30),
+    FOREIGN KEY(pid) REFERENCES patients(pid),
+    FOREIGN KEY(did) REFERENCES doctors(did)
+);
+
+
+--BCNF
+
+--EXAMPLE VIOLATING BCNF
+
+-- Violating BCNF
+CREATE TABLE PatientDoctors
+(
+    pid INT(3),
+    did INT(3),
+    primary_diagnosis VARCHAR(50),
+    PRIMARY KEY (pid, did)
+);
+
+
+--EXAMPLE FOLLOWING BCNF
+
+-- Decompose to satisfy BCNF
+CREATE TABLE PatientPrimaryDiagnosis
+(
+    pid INT(3),
+    primary_diagnosis VARCHAR(50),
+    PRIMARY KEY (pid)
+);
+
+CREATE TABLE DoctorAssignments
+(
+    pid INT(3),
+    did INT(3),
+    PRIMARY KEY (pid, did),
+    FOREIGN KEY(pid) REFERENCES patients(pid),
+    FOREIGN KEY(did) REFERENCES doctors(did)
+);
+
+
+--Write a query to display the product information and choose the most appropriate attribute(s) as the primary key for the Products table. Justify your choice.
+
+SELECT pid, pname, price, stock, location
+FROM Products;
+
+-- Justification: pid is unique for each product and can be used as the primary key to ensure data integrity.
+
+
+
+-- Write a query that joins the Orders and Customer tables using the foreign key relationship. This query should retrieve order details (order ID, customer name, product ID) for a specific customer (e.g., customer ID 102).
+
+SELECT o.oid, c.cname, o.pid
+FROM Orders o
+INNER JOIN Customer c ON o.cid = c.cid
+WHERE o.cid = 102;
+
+
+

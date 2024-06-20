@@ -1,0 +1,196 @@
+CREATE DATABASE hospital;
+
+USE hospital;
+
+-- Patients - pid, pname, age, addr
+CREATE TABLE patients (
+    pid INT(3) PRIMARY KEY,
+    pname VARCHAR(50) NOT NULL,
+    age INT(3),
+    addr VARCHAR(50)
+);
+
+-- Doctors - did, dname, specialty, phone
+CREATE TABLE doctors (
+    did INT(3) PRIMARY KEY,
+    dname VARCHAR(50) NOT NULL,
+    specialty VARCHAR(50),
+    phone VARCHAR(15)
+);
+
+-- Appointments - aid, pid, did, date, time, status
+CREATE TABLE appointments (
+    aid INT(3) PRIMARY KEY,
+    pid INT(3),
+    did INT(3),
+    date DATE,
+    time TIME,
+    status VARCHAR(30) CHECK(status IN ('scheduled', 'completed', 'cancelled')),
+    FOREIGN KEY (pid) REFERENCES patients(pid),
+    FOREIGN KEY (did) REFERENCES doctors(did)
+);
+
+-- Payments - pay_id, aid, amount, mode (upi, credit, debit), status
+CREATE TABLE payments (
+    pay_id INT(3) PRIMARY KEY,
+    aid INT(3),
+    amount INT(10) NOT NULL,
+    mode VARCHAR(30) CHECK(mode IN ('upi', 'credit', 'debit')),
+    status VARCHAR(30),
+    FOREIGN KEY (aid) REFERENCES appointments(aid)
+);
+
+
+-- To delete a table
+DROP TABLE patients;
+
+-- To drop the whole database
+DROP DATABASE hospital;
+
+
+-- To add a column to a table
+ALTER TABLE patients
+ADD phone VARCHAR(15);
+
+-- To delete a column
+ALTER TABLE patients
+DROP COLUMN phone;
+
+-- To rename a column
+ALTER TABLE appointments
+RENAME COLUMN status TO appointment_status;
+
+-- To modify datatype or add conditions
+ALTER TABLE doctors
+MODIFY COLUMN phone VARCHAR(15) UNIQUE;
+
+ALTER TABLE appointments
+MODIFY COLUMN status VARCHAR(30) CHECK(status IN ('scheduled', 'completed', 'cancelled', 'pending'));
+
+
+-- The TRUNCATE TABLE command deletes the data inside a table, but not the table itself.
+TRUNCATE TABLE patients;
+
+-- Implementation of various constraints
+
+-- NOT NULL constraint
+ALTER TABLE patients
+MODIFY COLUMN age INT(3) NOT NULL;
+
+-- UNIQUE constraint
+ALTER TABLE doctors
+MODIFY COLUMN phone VARCHAR(15) UNIQUE;
+
+-- CHECK constraint
+ALTER TABLE payments
+MODIFY COLUMN status VARCHAR(30) CHECK(status IN ('pending', 'cancelled', 'completed'));
+
+-- DEFAULT constraint
+ALTER TABLE doctors
+MODIFY COLUMN specialty VARCHAR(50) DEFAULT 'General';
+
+
+)
+-- Inserting values into patients table
+INSERT INTO patients VALUES (1, 'John Doe', 45, '123 Main St');
+INSERT INTO patients VALUES (2, 'Jane Smith', 38, '456 Oak Ave');
+
+-- Inserting values into doctors table
+INSERT INTO doctors VALUES (1, 'Dr. Brown', 'Cardiologist', '555-1234');
+INSERT INTO doctors VALUES (2, 'Dr. Green', 'Neurologist', '555-5678');
+
+-- Inserting values into appointments table
+INSERT INTO appointments VALUES (1, 1, 1, '2024-06-20', '10:00:00', 'scheduled');
+INSERT INTO appointments VALUES (2, 2, 2, '2024-06-21', '14:00:00', 'scheduled');
+
+-- Inserting values into payments table
+INSERT INTO payments VALUES (1, 1, 200, 'upi', 'completed');
+INSERT INTO payments VALUES (2, 2, 150, 'credit', 'pending');
+
+-- Updating a record
+UPDATE doctors
+SET phone = '555-9999'
+WHERE dname = 'Dr. Brown';
+
+-- Deleting a record
+DELETE FROM patients
+WHERE pname = 'John Doe';
+
+
+#Additional Operations
+
+-- Creating a new table 'employees' with specified columns
+CREATE TABLE employees (
+    id INT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    position VARCHAR(50),
+    salary INT(10)
+);
+
+-- Inserting a new row into the employees table
+INSERT INTO employees (id, name, position, salary)
+VALUES (1, 'Alice Williams', 'Nurse', 60000);
+
+-- Updating the salary of the employee with id = 1
+UPDATE employees
+SET salary = 65000
+WHERE id = 1;
+
+-- Deleting the row from employees where id = 1
+DELETE FROM employees
+WHERE id = 1;
+
+-- Creating a new table 'students' with various constraints
+CREATE TABLE students (
+    student_id INT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    age INT CHECK (age >= 18),
+    course_id INT,
+    grade CHAR(1) DEFAULT 'F'
+);
+
+-- Creating another table 'courses' and setting up a foreign key constraint in the students table
+CREATE TABLE courses (
+    course_id INT PRIMARY KEY,
+    course_name VARCHAR(100) NOT NULL
+);
+
+-- Altering the students table to add the foreign key constraint
+ALTER TABLE students
+ADD CONSTRAINT fk_course
+FOREIGN KEY (course_id)
+REFERENCES courses(course_id)
+ON DELETE CASCADE;
+
+-- Inserting some data into the students table while respecting the constraints
+INSERT INTO students (student_id, name, email, age, course_id, grade)
+VALUES (1, 'Alice Johnson', 'alice@example.com', 21, 101, 'A');
+
+-- This will fail because 'student_id' is not unique
+-- INSERT INTO students (student_id, name, email, age, course_id, grade)
+-- VALUES (1, 'Bob Smith', 'bob@example.com', 22, 102, 'B');
+
+-- This will also fail because 'name' has a NOT NULL constraint
+-- INSERT INTO students (student_id, email, age, course_id, grade)
+-- VALUES (3, 'charlie@example.com', 19, 103, 'B');
+
+-- This will fail because 'age' doesn't meet the CHECK constraint
+-- INSERT INTO students (student_id, name, email, age, course_id, grade)
+-- VALUES (4, 'David Brown', 'david@example.com', 16, 104, 'C');
+
+-- Creating a SELECT query that retrieves products based on numeric and date conditions
+-- (Assuming a 'release_date' column in products for illustration)
+-- SELECT * 
+-- FROM products 
+-- WHERE price > 100 AND release_date > '2022-01-01';
+
+-- Updating a record and setting the last_updated column to the current datetime
+-- (Assuming a 'last_updated' column in products for illustration)
+-- UPDATE products
+-- SET price = 1100.00, last_updated = NOW()  
+-- WHERE pid = 1;
+
+-- Deleting products with stock below a certain threshold
+-- DELETE FROM products 
+-- WHERE stock < 100;

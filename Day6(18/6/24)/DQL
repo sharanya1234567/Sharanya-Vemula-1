@@ -1,0 +1,77 @@
+/*GROUP BY*/
+
+/*Find the total number of appointments for each doctor.*/
+
+SELECT doctor_id, COUNT(*) AS total_appointments
+FROM appointments
+GROUP BY doctor_id;
+
+/*Find the number of patients in each age range (e.g., 0-10, 11-20, 21-30, 31+).*/
+
+SELECT 
+  CASE 
+    WHEN age BETWEEN 0 AND 10 THEN '0-10' 
+    WHEN age BETWEEN 11 AND 20 THEN '11-20'
+    WHEN age BETWEEN 21 AND 30 THEN '21-30'
+    ELSE '31+' 
+  END AS age_range, COUNT(*) AS patient_count
+FROM patients
+GROUP BY age_range;
+
+/*Find the average cost of treatments grouped by department.*/
+
+SELECT department, AVG(cost) AS avg_cost
+FROM treatments
+GROUP BY department;
+
+
+/*ORDER BY*/
+
+/*Retrieve all treatments ordered by their cost in descending order.*/
+
+SELECT *
+FROM treatments
+ORDER BY cost DESC;
+
+/*Retrieve all patients ordered by their age in ascending order.*/
+
+SELECT *
+FROM patients
+ORDER BY age ASC;
+
+/*Retrieve all appointments ordered by the appointment amount in descending order and then by the patient's last name in ascending order.*/
+
+SELECT a.appointment_id, p.last_name, a.amount
+FROM appointments a
+JOIN patients p ON a.patient_id = p.patient_id
+ORDER BY a.amount DESC, p.last_name ASC;
+
+
+/*HAVING*/
+
+/*Find the departments where the total cost of treatments is greater than 5000.*/
+
+SELECT department, SUM(cost) AS total_cost
+FROM treatments
+GROUP BY department
+HAVING SUM(cost) > 5000;
+
+/*Find the patients who have incurred a total billing amount greater than 10000.*/
+
+SELECT p.patient_id, p.first_name, p.last_name, SUM(b.amount) AS total_billing
+FROM patients p
+JOIN billing b ON p.patient_id = b.patient_id
+GROUP BY p.patient_id, p.first_name, p.last_name
+HAVING SUM(b.amount) > 10000;
+
+
+/*Find the treatments that have a cost between 1000 and 2000 and are provided in the 'Cardiology' department.*/
+
+SELECT treatment_id, treatment_name, cost
+FROM treatments
+WHERE department = 'Cardiology'
+GROUP BY treatment_id, treatment_name, cost
+HAVING cost BETWEEN 1000 AND 2000;
+
+
+

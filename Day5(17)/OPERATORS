@@ -1,0 +1,88 @@
+ARITHMETIC OPERATORS
+
+#Calculate the total revenue by adding the prices of all treatments in the billing table.
+
+SELECT SUM(amount) AS total_revenue 
+FROM billing;
+
+/*Find treatments whose cost is divisible by 3 using the modulo operator*/
+
+SELECT * 
+FROM billing 
+WHERE amount % 3 = 0;
+
+/*Subtract the average treatment cost from each treatment's cost and display the result as cost_difference.*/
+
+SELECT treatment_id, treatment_name, amount, 
+(amount - (SELECT AVG(amount) FROM billing)) AS cost_difference 
+FROM billing;
+
+COMPARISION OPERATORS
+
+/*Retrieve all treatments with a cost greater than or equal to 5000.*/
+
+SELECT * 
+FROM billing 
+WHERE amount >= 5000;
+
+/*Find patients whose age is not equal to 60.*/
+
+SELECT * 
+FROM patients 
+WHERE age != 60;
+
+/*Retrieve all appointments where the amount is less than or equal to 1000.*/
+
+SELECT * 
+FROM appointments 
+WHERE amount <= 1000;
+
+BITWISE OPERATORS
+
+/*Explanation of the bitwise AND (&) operator with an example:*/
+
+/*Example: 5 & 3*/
+
+SELECT 5 & 3 AS bitwise_and_result;
+
+/*Explanation of the bitwise OR (|) operator with an example:*/
+
+/*.Example: 5 | 3*/
+
+SELECT 5 | 3 AS bitwise_or_result;
+
+/*Explanation of the bitwise XOR (^) operator with an example:*/
+
+/*Example: 5 ^ 3*/
+
+SELECT 5 ^ 3 AS bitwise_xor_result;
+
+
+LOGICAL OPERATORS
+
+/*Retrieve the treatments that are in Mumbai and have a stock level greater than 10.*/
+
+SELECT * 
+FROM treatments 
+WHERE location = 'Mumbai' 
+AND stock > 10;
+
+
+/*Find patients who are either from Mumbai or have placed an appointment with a fee greater than 20000.*/
+
+SELECT * 
+FROM patients 
+WHERE address LIKE '%Mumbai%' 
+OR 
+(SELECT SUM(amount) 
+ FROM appointments a 
+ WHERE a.patient_id = patients.patient_id) > 20000;
+
+/*Retrieve appointments where the payment mode is not 'cash' and the status is 'completed'.*/
+
+SELECT * 
+FROM billing 
+WHERE payment_mode != 'cash' 
+AND status = 'completed';
+
+

@@ -1,0 +1,139 @@
+/*STRING FUNCTIONS*/
+
+/*1)CONCAT() Function */
+
+SELECT CONCAT('Dr. ', first_name, ' ', last_name) AS full_name
+FROM doctors;
+
+/*LCASE() and LOWER() Functions*/
+
+SELECT LOWER('HOSPITAL MANAGEMENT SYSTEM');
+
+/*Extract Substring:
+
+To extract a substring from the 5th position to the 10th position (inclusive) from the string "Hello, World!".*/
+
+SELECT SUBSTR('Hello, World!', 5, 6);  
+
+/*LPAD() and RPAD() Functions*/
+
+/*LPAD() pads a string with a specified string on the left side, and RPAD() does the same on the right side.*/
+
+SELECT LPAD('Doctor', 10, '*');  
+SELECT RPAD('Doctor', 10, '*');   
+
+/*TRIM() Funtion*/
+
+/*To trim both leading and trailing spaces from the string ' Hello, World! '.*/
+
+SELECT TRIM('   Hello, World!   ');  
+
+
+/*DATE AND TIME FUNCTIONS*/
+
+/*CURRENT_DATE() vs SYSDATE():*/
+
+/*CURRENT_DATE() returns the current date, while SYSDATE() returns the current date and time.*/
+
+SELECT CURRENT_DATE() AS today;
+SELECT SYSDATE() AS now;
+
+
+/*Calculate Days Between Dates:*/
+
+/*Calculate the number of days between '2023-06-15' and '2023-07-20'.*/
+
+SELECT DATEDIFF('2023-07-20', '2023-06-15') AS day_difference;  -- Output: 35
+
+/*LAST_DAY() FUNCTION*/
+/*The LAST_DAY() function returns the last day of the month for a given date.*/
+
+SELECT LAST_DAY('2023-05-01') AS last_day_of_may;
+
+
+/*Add 3 Months to Current Date:*/
+
+/*Add 3 months to the current date.*/
+
+SELECT ADDDATE(CURRENT_DATE(), INTERVAL 3 MONTH) AS future_date;
+
+
+/*Extract Time Component:*/
+
+/*Extract the time component (hours, minutes, seconds) from a datetime value.*/
+
+SELECT TIME('2023-05-01 12:34:56') AS time_component;  
+
+
+/*NUMERIC FUNCTIONS*/
+
+/*AVG() AND COUNT() FUNCTIONS*/
+
+SELECT AVG(cost) AS avg_cost
+FROM treatments;
+
+SELECT COUNT(*) AS total_patients
+FROM patients;
+
+
+/*Calculate Square Root*/
+/*Calculate the square root of 144.*/
+
+SELECT SQRT(144) AS result; 
+
+/*Round to Two Decimal Places:*/
+
+/*Round the number 3.14159 to two decimal places.*/
+
+SELECT ROUND(3.14159, 2) AS result;
+
+/*MIN() AND MAX() FUNCTIONS*/
+
+/*The MIN() function returns the minimum value, and the MAX() function returns the maximum value in a group of values.*/
+
+SELECT MIN(cost) AS min_cost, MAX(cost) AS max_cost, department
+FROM treatments
+GROUP BY department;
+
+/*CALCULATE POWER*/
+
+/*Calculate the power of 2 raised to the 5th power.
+sql*/
+
+SELECT POW(2, 5) AS result;
+
+
+/*Finding Doctors by Specialization with CONCAT*/
+
+SELECT CONCAT(first_name, ' ', last_name) AS full_name, specialization
+FROM doctors;
+
+/*Lowercase Conversion for Patient Names*/
+
+SELECT LOWER(first_name) AS lower_first_name, LOWER(last_name) AS lower_last_name
+FROM patients;
+
+/*Extract Year from Appointment Date*/
+
+SELECT appointment_id, YEAR(appointment_date) AS year
+FROM appointments;
+
+/*Count Patients by Gender*/
+
+SELECT gender, COUNT(*) AS total_patients
+FROM patients
+GROUP BY gender;
+
+/*Calculating Total Billing Amount for Each Patient*/
+
+SELECT patient_id, SUM(amount) AS total_billing
+FROM billing
+GROUP BY patient_id;
+
+
+
+
+
+
+ 
+

@@ -1,0 +1,186 @@
+-- Creating the database
+CREATE DATABASE hospital;
+
+-- Using the hospital database
+USE hospital;
+
+-- Creating the Doctors table
+CREATE TABLE doctors (
+    doc_id INT PRIMARY KEY,
+    doc_name VARCHAR(50) NOT NULL,
+    department_id INT,
+    specialty VARCHAR(50)
+);
+
+-- Creating the Patients table
+CREATE TABLE patients (
+    pat_id INT PRIMARY KEY,
+    pat_name VARCHAR(50) NOT NULL,
+    age INT,
+    address VARCHAR(100)
+);
+
+-- Creating the Appointments table
+CREATE TABLE appointments (
+    app_id INT PRIMARY KEY,
+    doc_id INT,
+    pat_id INT,
+    app_date DATE,
+    reason VARCHAR(100),
+    FOREIGN KEY (doc_id) REFERENCES doctors(doc_id),
+    FOREIGN KEY (pat_id) REFERENCES patients(pat_id)
+);
+
+-- Creating the Departments table
+CREATE TABLE departments (
+    department_id INT PRIMARY KEY,
+    department_name VARCHAR(50) NOT NULL
+);
+
+-- Creating the Bills table
+CREATE TABLE bills (
+    bill_id INT PRIMARY KEY,
+    app_id INT,
+    amount DECIMAL(10, 2) NOT NULL,
+    payment_status VARCHAR(50),
+    FOREIGN KEY (app_id) REFERENCES appointments(app_id)
+);
+
+-- Inserting sample data into Doctors table
+INSERT INTO doctors (doc_id, doc_name, department_id, specialty) VALUES
+(1, 'Dr. Smith', 101, 'Cardiology'),
+(2, 'Dr. Jones', 102, 'Neurology'),
+(3, 'Dr. Lee', 101, 'Cardiology'),
+(4, 'Dr. Patel', 103, 'Orthopedics');
+
+-- Inserting sample data into Patients table
+INSERT INTO patients (pat_id, pat_name, age, address) VALUES
+(201, 'John Doe', 30, '123 Main St'),
+(202, 'Jane Roe', 25, '456 Maple Ave'),
+(203, 'Alice Johnson', 45, '789 Oak Dr'),
+(204, 'Bob Brown', 50, '321 Pine Rd');
+
+-- Inserting sample data into Appointments table
+INSERT INTO appointments (app_id, doc_id, pat_id, app_date, reason) VALUES
+(1001, 1, 201, '2023-05-01', 'Checkup'),
+(1002, 2, 202, '2023-05-02', 'Consultation'),
+(1003, 1, 203, '2023-05-03', 'Follow-up'),
+(1004, 3, 204, '2023-05-04', 'Surgery');
+
+-- Inserting sample data into Departments table
+INSERT INTO departments (department_id, department_name) VALUES
+(101, 'Cardiology'),
+(102, 'Neurology'),
+(103, 'Orthopedics');
+
+-- Inserting sample data into Bills table
+INSERT INTO bills (bill_id, app_id, amount, payment_status) VALUES
+(301, 1001, 200.00, 'Paid'),
+(302, 1002, 300.00, 'Unpaid'),
+(303, 1003, 150.00, 'Paid'),
+(304, 1004, 500.00, 'Pending');
+
+
+--Joins Examples
+
+--INNER JOIN
+
+--Get the names of patients and their respective doctors for each appointment.
+
+SELECT patients.pat_name, doctors.doc_name, appointments.app_date 
+FROM appointments 
+INNER JOIN patients ON appointments.pat_id = patients.pat_id 
+INNER JOIN doctors ON appointments.doc_id = doctors.doc_id;
+
+--LEFT OUTER JOIN
+
+--Get all doctors and their appointments, including doctors who might not have any appointments.
+
+SELECT doctors.doc_name, appointments.app_id, appointments.app_date 
+FROM doctors 
+LEFT JOIN appointments ON doctors.doc_id = appointments.doc_id;
+
+--RIGHT OUTER JOIN
+
+--Get all appointments and their associated doctors, including appointments without a valid doctor (if any).
+
+SELECT appointments.app_id, appointments.app_date, doctors.doc_name 
+FROM appointments 
+RIGHT JOIN doctors ON appointments.doc_id = doctors.doc_id;
+
+
+--FULL OUTER JOIN
+
+--Get a list of all doctors and all appointments, combining data from both sides.
+
+-- Note: MySQL does not support FULL OUTER JOIN directly, so we use UNION of LEFT and RIGHT JOIN
+SELECT doctors.doc_name, appointments.app_id, appointments.app_date 
+FROM doctors 
+LEFT JOIN appointments ON doctors.doc_id = appointments.doc_id
+UNION
+SELECT doctors.doc_name, appointments.app_id, appointments.app_date 
+FROM appointments 
+RIGHT JOIN doctors ON appointments.doc_id = doctors.doc_id;
+
+--SELF JOIN
+
+--Get a list of doctors along with their department colleagues (excluding themselves).
+
+SELECT d1.doc_name AS doctor, d2.doc_name AS colleague 
+FROM doctors d1
+INNER JOIN doctors d2 ON d1.department_id = d2.department_id 
+WHERE d1.doc_id != d2.doc_id;
+
+--CROSS JOIN
+
+--List all possible combinations of patients and appointments.
+
+SELECT patients.pat_name, appointments.app_date 
+FROM patients 
+CROSS JOIN appointments;
+
+-- Display details of all appointments that involve doctors from the Cardiology department.
+
+SELECT appointments.*, doctors.doc_name 
+FROM appointments 
+INNER JOIN doctors ON appointments.doc_id = doctors.doc_id 
+WHERE doctors.department_id = 101;
+
+--Display details of all appointments where the bill was paid.
+
+SELECT appointments.*, bills.amount 
+FROM appointments 
+INNER JOIN bills ON appointments.app_id = bills.app_id 
+WHERE bills.payment_status = 'Paid';
+
+
+--Display appointment id, amount, patient name, and payment status for appointments involving patients younger than 30 years.
+SELECT appointments.app_id, bills.amount, patients.pat_name, bills.payment_status 
+FROM appointments 
+INNER JOIN bills ON appointments.app_id = bills.app_id 
+INNER JOIN patients ON appointments.pat_id = patients.pat_id 
+WHERE patients.age < 30;
+
+-- Display appointment id, amount, patient name, and payment status for appointments involving patients younger than 30 years and payment was made through a pending status.
+SELECT appointments.app_id, bills.amount, patients.pat_name, bills.payment_status 
+FROM appointments 
+INNER JOIN bills ON appointments.app_id = bills.app_id 
+INNER JOIN patients ON appointments.pat_id = patients.pat_id 
+WHERE patients.age < 30 AND bills.payment_status = 'Pending';
+
+--Display appointment id, patient name, doctor name, and department for all appointments where the payment status is either 'Pending' or 'Unpaid'.
+SELECT appointments.app_id, patients.pat_name, doctors.doc_name, departments.department_name 
+FROM appointments 
+INNER JOIN patients ON appointments.pat_id = patients.pat_id 
+INNER JOIN doctors ON appointments.doc_id = doctors.doc_id 
+INNER JOIN departments ON doctors.department_id = departments.department_id 
+INNER JOIN bills ON appointments.app_id = bills.app_id 
+WHERE bills.payment_status IN ('Pending', 'Unpaid');
+
+--Display the details of all appointments including patient and doctor details.
+
+SELECT appointments.app_id, patients.pat_name, doctors.doc_name, appointments.app_date, appointments.reason 
+FROM appointments 
+INNER JOIN patients ON appointments.pat_id = patients.pat_id 
+INNER JOIN doctors ON appointments.doc_id = doctors.doc_id;
+
