@@ -1,0 +1,173 @@
+--Procedures
+--Example 1: Select all patients
+
+DELIMITER //
+CREATE PROCEDURE select_all_patients()
+BEGIN
+    SELECT * FROM patients;
+END //
+DELIMITER ;
+
+CALL select_all_patients();
+
+
+--Functions
+--Example 2: Function to calculate total revenue from completed billings
+
+DELIMITER $$
+CREATE FUNCTION get_total_revenue()
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE total_revenue DECIMAL(10,2);
+    SELECT SUM(amount) INTO total_revenue
+    FROM billing
+    WHERE payment_status = 'Completed';
+    RETURN total_revenue;
+END$$
+DELIMITER ;
+
+SELECT get_total_revenue();
+
+
+-- Procedure with IN parameter
+--Example 3: Retrieve patient details by ID
+
+DELIMITER $$
+CREATE PROCEDURE get_patient_details(IN patient_id INT)
+BEGIN
+    SELECT * FROM patients WHERE pid = patient_id;
+END$$
+DELIMITER ;
+
+CALL get_patient_details(5);
+
+
+--Procedure with OUT parameter
+--Example 4: Get count of patients
+
+DELIMITER $$
+CREATE PROCEDURE get_patient_count(OUT total_count INT)
+BEGIN
+    SELECT COUNT(*) INTO total_count FROM patients;
+END$$
+DELIMITER ;
+
+CALL get_patient_count(@count);
+SELECT @count AS total_patients;
+
+
+--Using predefined SUM() cursor
+--Example 5: Calculate total amount of completed billings
+
+DELIMITER $$
+CREATE PROCEDURE calc_total_completed_billing(OUT total_amount DECIMAL(10,2))
+BEGIN
+    SELECT SUM(amount) INTO total_amount
+    FROM billing
+    WHERE payment_status = 'Completed';
+END$$
+DELIMITER ;
+
+CALL calc_total_completed_billing(@total);
+SELECT @total AS total_completed_billing;
+
+
+--Declare and use a cursor
+--Example 6: Iterate through patients and print their names
+
+DELIMITER //
+CREATE PROCEDURE print_patient_names()
+BEGIN
+    DECLARE patient_name VARCHAR(100);
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE patient_cursor CURSOR FOR SELECT name FROM patients;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN patient_cursor;
+
+    get_names: LOOP
+        FETCH patient_cursor INTO patient_name;
+        IF done THEN
+            LEAVE get_names;
+        END IF;
+        SELECT patient_name;
+    END LOOP get_names;
+
+    CLOSE patient_cursor;
+END //
+DELIMITER ;
+
+CALL print_patient_names();
+
+
+--Write a query to create a function that calculates the total number of appointments for a specific doctor and call the function to get the total number of appointments for doctor_id 1.
+
+DELIMITER $$
+CREATE FUNCTION get_appointments_count(doctor_id INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE total_appointments INT;
+    SELECT COUNT(*) INTO total_appointments
+    FROM appointments
+    WHERE doctor_id = doctor_id;
+    RETURN total_appointments;
+END$$
+DELIMITER ;
+
+SELECT get_appointments_count(1);
+
+
+--Write a query to create a procedure with an IN parameter to retrieve all appointments for a specific patient based on the patient ID passed as a parameter. Call the procedure for patient ID 3.
+
+DELIMITER $$
+CREATE PROCEDURE get_patient_appointments(IN patient_id INT)
+BEGIN
+    SELECT * FROM appointments WHERE pid = patient_id;
+END$$
+DELIMITER ;
+
+CALL get_patient_appointments(3);
+
+
+--Write a query to create a procedure with an OUT parameter to get the count of doctors in the 'doctors' table, store it in a variable, and select the variable to display the count.
+
+DELIMITER $$
+CREATE PROCEDURE get_doctor_count(OUT total_count INT)
+BEGIN
+    SELECT COUNT(*) INTO total_count FROM doctors;
+END$$
+DELIMITER ;
+
+CALL get_doctor_count(@count);
+SELECT @count AS total_doctors;
+
+
+--Write a query to declare and use a cursor to iterate through the 'doctors' table and print the doctor names.
+
+DELIMITER //
+CREATE PROCEDURE print_doctor_names()
+BEGIN
+    DECLARE doctor_name VARCHAR(100);
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE doctor_cursor CURSOR FOR SELECT name FROM doctors;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN doctor_cursor;
+
+    get_names: LOOP
+        FETCH doctor_cursor INTO doctor_name;
+        IF done THEN
+            LEAVE get_names;
+        END IF;
+        SELECT doctor_name;
+    END LOOP get_names;
+
+    CLOSE doctor_cursor;
+END //
+DELIMITER ;
+
+CALL print_doctor_names();
+
+
