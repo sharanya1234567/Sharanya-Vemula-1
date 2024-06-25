@@ -1,0 +1,151 @@
+-- Create database
+CREATE DATABASE hospital;
+
+USE hospital;
+
+-- Patients - pid, pname, age, addr
+CREATE TABLE patients (
+    pid INT(3) PRIMARY KEY,
+    pname VARCHAR(50) NOT NULL,
+    age INT(3),
+    addr VARCHAR(100)
+);
+
+-- Doctors - did, dname, specialty, location (Mumbai or Delhi)
+CREATE TABLE doctors (
+    did INT(3) PRIMARY KEY,
+    dname VARCHAR(50) NOT NULL,
+    specialty VARCHAR(50),
+    location VARCHAR(30) CHECK(location IN ('Mumbai', 'Delhi'))
+);
+
+-- Appointments - aid, pid, did, date, time, status
+CREATE TABLE appointments (
+    aid INT(3) PRIMARY KEY,
+    pid INT(3),
+    did INT(3),
+    date DATE,
+    time TIME,
+    status VARCHAR(30) CHECK(status IN ('Scheduled', 'Completed', 'Cancelled')),
+    FOREIGN KEY(pid) REFERENCES patients(pid),
+    FOREIGN KEY(did) REFERENCES doctors(did)
+);
+
+-- Payments - pay_id, aid, amount, mode (upi, credit, debit), status
+CREATE TABLE payments (
+    pay_id INT(3) PRIMARY KEY,
+    aid INT(3),
+    amount INT(10) NOT NULL,
+    mode VARCHAR(30) CHECK(mode IN ('upi', 'credit', 'debit')),
+    status VARCHAR(30),
+    FOREIGN KEY(aid) REFERENCES appointments(aid)
+);
+
+# Inserting values into doctors table
+INSERT INTO doctors VALUES (1, 'Dr. Smith', 'Cardiologist', 'Mumbai');
+INSERT INTO doctors VALUES (2, 'Dr. Sharma', 'Dermatologist', 'Delhi');
+INSERT INTO doctors VALUES (3, 'Dr. Khan', 'Pediatrician', 'Mumbai');
+INSERT INTO doctors VALUES (4, 'Dr. Patel', 'Orthopedic', 'Delhi');
+
+# Inserting values into patients table
+INSERT INTO patients VALUES (101, 'Ravi', 30, '123 Main Street');
+INSERT INTO patients VALUES (102, 'Rahul', 25, '456 Oak Street');
+INSERT INTO patients VALUES (103, 'Simran', 32, '789 Pine Street');
+INSERT INTO patients VALUES (104, 'Purvesh', 28, '321 Maple Avenue');
+INSERT INTO patients VALUES (105, 'Sanjana', 22, '654 Cedar Lane');
+
+# Inserting values into appointments table
+INSERT INTO appointments VALUES (10001, 101, 1, '2024-06-20', '10:00:00', 'Scheduled');
+INSERT INTO appointments VALUES (10002, 102, 2, '2024-06-21', '11:00:00', 'Scheduled');
+INSERT INTO appointments VALUES (10003, 103, 3, '2024-06-22', '12:00:00', 'Completed');
+INSERT INTO appointments VALUES (10004, 104, 4, '2024-06-23', '13:00:00', 'Cancelled');
+
+# Inserting values into payments table
+INSERT INTO payments VALUES (1, 10001, 1500, 'upi', 'Pending');
+INSERT INTO payments VALUES (2, 10002, 2000, 'credit', 'Completed');
+INSERT INTO payments VALUES (3, 10003, 1200, 'debit', 'Completed');
+
+-- TCL (Transaction Control Language) Commands
+
+-- Commit
+START TRANSACTION;
+INSERT INTO doctors (did, dname, specialty, location) VALUES (5, 'Dr. John', 'Neurologist', 'Delhi');
+COMMIT;
+
+-- Rollback
+START TRANSACTION;
+INSERT INTO patients (pid, pname, age, addr) VALUES (106, 'John Doe', 35, '987 Willow Lane');
+INSERT INTO appointments (aid, pid, did, date, time, status) VALUES (10005, 106, 2, '2024-06-24', '14:00:00', 'Scheduled');
+INSERT INTO payments (pay_id, aid, amount, mode, status) VALUES (4, 10005, 2500, 'credit', 'Pending');
+ROLLBACK;
+
+-- Savepoint
+START TRANSACTION;
+INSERT INTO doctors (did, dname, specialty, location) VALUES (6, 'Dr. Mary', 'Ophthalmologist', 'Mumbai');
+SAVEPOINT SavePoint1;
+INSERT INTO patients (pid, pname, age, addr) VALUES (107, 'Jane Doe', 40, '123 Birch Road');
+ROLLBACK TO SavePoint1;
+COMMIT;
+
+-- Triggers
+
+-- 1. Trigger to update payment status after appointment is completed
+DELIMITER //
+CREATE TRIGGER update_payment_status
+AFTER UPDATE ON appointments
+FOR EACH ROW
+BEGIN
+    IF NEW.status = 'Completed' THEN
+        UPDATE payments
+        SET status = 'Completed'
+        WHERE aid = NEW.aid;
+    END IF;
+END //
+DELIMITER ;
+
+-- 2. Trigger to check doctor availability before inserting an appointment
+DELIMITER //
+CREATE TRIGGER check_doctor_availability
+BEFORE INSERT ON appointments
+FOR EACH ROW
+BEGIN
+    DECLARE doctor_appointments INT;
+    SELECT COUNT(*) INTO doctor_appointments
+    FROM appointments
+    WHERE did = NEW.did AND date = NEW.date AND time = NEW.time AND status = 'Scheduled';
+    IF doctor_appointments > 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Doctor is not available at this time';
+    END IF;
+END //
+DELIMITER ;
+
+-- 3. Trigger to update doctor schedule after appointment is placed
+DELIMITER //
+CREATE TRIGGER update_doctor_schedule
+AFTER INSERT ON appointments
+FOR EACH ROW
+BEGIN
+    UPDATE doctors
+    SET location = CASE WHEN location = 'Mumbai' THEN 'Delhi' ELSE 'Mumbai' END
+    WHERE did = NEW.did;
+END //
+DELIMITER ;
+
+
+-- 1. View that displays the patients with their corresponding appointments
+CREATE VIEW PatientAppointments AS
+SELECT p.pid, p.pname, a.aid, a.date, a.time, a.status, d.dname, d.specialty
+FROM patients p
+JOIN appointments a ON p.pid = a.pid
+JOIN doctors d ON a.did = d.did;
+
+-- 2. Create or Replace View to show payment details with appointment and patient information
+CREATE OR REPLACE VIEW PaymentAppointmentPatientDetails AS
+SELECT pay.pay_id, pay.aid, a.pid, p.pname, p.age, p.addr, pay.amount, pay.mode, pay.status
+FROM payments pay
+JOIN appointments a ON pay.aid = a.aid
+JOIN patients p ON a.pid = p.pid;
+
+-- 3. Drop View if it exists
+DROP VIEW IF EXISTS PaymentAppointmentPatientDetails;
